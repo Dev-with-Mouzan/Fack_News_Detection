@@ -17,8 +17,8 @@ nltk.download('punkt_tab')
 
 # Load model and vectorizer
 try:
-    model = joblib.load('final_model(XGBoost).pkl')
-    vectorizer = joblib.load('vectorizer.pkl')
+    model = joblib.load("final_model(XGBoost).pkl")
+    vectorizer = joblib.load("vectorizer.pkl")
 except Exception as e:
     print(f"Error loading model or vectorizer: {e}")
 
@@ -311,8 +311,8 @@ class NewsInput(BaseModel):
 @app.post("/predict")
 async def predict(data: NewsInput):
     cleaned = preprocess(data.text)
-    vect = vectorizer.transform([cleaned])
-    pred = model.predict(vect)[0]
+    transform = vectorizer.transform([cleaned])
+    pred = model.predict(transform)[0]
     
     # In my training notebook: 1 was Real, 0 was Fake
     # df_true["class"]=1, df_fake["class"]=0
