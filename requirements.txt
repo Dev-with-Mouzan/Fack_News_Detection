@@ -1,6 +1,4 @@
-fastapi
-uvicorn
-pydantic
+
 joblib
 nltk
 scikit-learn
