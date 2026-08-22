@@ -59,8 +59,8 @@ export default function Footer() {
         <div className="max-w-xs">
           <Link to="/" className="flex items-center gap-2.5">
             <img
-              src="/icon-192.png"
-              alt=""
+              src="/logo.png"
+              alt="FakeNews Detector logo"
               width={32}
               height={32}
               className="h-8 w-8 rounded-lg object-cover ring-1 ring-line"

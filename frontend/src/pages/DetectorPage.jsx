@@ -18,22 +18,27 @@ import { AlertTriangleIcon } from "../components/ui/icons.jsx";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const STEP_DEFS = {
-  ml: [
-    { title: "Preprocessing text", desc: "Cleaning and tokenizing input" },
-    { title: "Running ML model", desc: "XGBoost classification in progress" },
-  ],
-  ai: [
-    { title: "Preprocessing text", desc: "Cleaning and tokenizing input" },
-    { title: "Searching the web", desc: "Finding related coverage via DuckDuckGo" },
-    { title: "Analyzing with GPT", desc: "Cross-referencing evidence against claims" },
-  ],
-  combined: [
-    { title: "Preprocessing text", desc: "Cleaning and tokenizing input" },
-    { title: "Running ML model", desc: "XGBoost classification in progress" },
-    { title: "AI verification", desc: "Web search + GPT fact-checking" },
-  ],
-};
+const AI_LABELS = { gpt: "GPT", google: "Gemini" };
+
+function getStepDefs(provider) {
+  const aiName = AI_LABELS[provider] || "AI";
+  return {
+    ml: [
+      { title: "Preprocessing text", desc: "Cleaning and tokenizing input" },
+      { title: "Running ML model", desc: "XGBoost classification in progress" },
+    ],
+    ai: [
+      { title: "Preprocessing text", desc: "Cleaning and tokenizing input" },
+      { title: "Searching the web", desc: "Finding related coverage via DuckDuckGo" },
+      { title: `Analyzing with ${aiName}`, desc: `${aiName} fact-checking in progress` },
+    ],
+    combined: [
+      { title: "Preprocessing text", desc: "Cleaning and tokenizing input" },
+      { title: "Running ML model", desc: "XGBoost classification in progress" },
+      { title: "AI verification", desc: `Web search + ${aiName} fact-checking` },
+    ],
+  };
+}
 
 export default function DetectorPage() {
   const location = useLocation();
@@ -49,7 +54,7 @@ export default function DetectorPage() {
   const [step, setStep] = useState(0);
   const textareaRef = useRef(null);
 
-  const steps = STEP_DEFS[mode];
+  const steps = getStepDefs(provider)[mode];
   const confidencePct = result ? Math.round((result.confidence ?? 0) * 100) : 0;
 
   // Restore a history entry passed via navigation state.

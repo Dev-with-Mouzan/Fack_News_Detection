@@ -50,8 +50,8 @@ export default function Navbar() {
           {/* Brand */}
           <Link to="/" className="group flex shrink-0 items-center gap-2.5" aria-label="FakeNews Detector home">
             <img
-              src="/icon-192.png"
-              alt=""
+              src="/logo.png"
+              alt="FakeNews Detector logo"
               width={36}
               height={36}
               className="h-9 w-9 rounded-xl object-cover shadow-glow ring-1 ring-line transition-transform duration-200 group-hover:scale-105"
