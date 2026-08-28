@@ -4,19 +4,18 @@
 
 # FakeNews Detector
 
-**Dual-engine news verification** — a local XGBoost classifier plus LLM fact-checking with live web sources, behind one FastAPI + React app.
+**Dual-engine news verification** — a local scikit-learn (Logistic Regression) classifier plus LLM fact-checking with live web sources, behind one FastAPI + React app.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white&style=flat-square)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white&style=flat-square)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white&style=flat-square)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white&style=flat-square)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)
-![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-20BEFF?logo=xgboost&logoColor=white&style=flat-square)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-LogReg-F7931E?logo=scikitlearn&logoColor=white&style=flat-square)
 ![LangChain](https://img.shields.io/badge/LangChain-1.x-1C3C3C?logo=langchain&logoColor=white&style=flat-square)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai&logoColor=white&style=flat-square)
 ![Google Gemini](https://img.shields.io/badge/Gemini-1.5--Flash-4285F4?logo=google&logoColor=white&style=flat-square)
 ![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?logo=vercel&logoColor=white&style=flat-square)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-TF--IDF-F7931E?logo=scikitlearn&logoColor=white&style=flat-square)
 ![DuckDuckGo](https://img.shields.io/badge/DuckDuckGo-Search-DE5833?logo=duckduckgo&logoColor=white&style=flat-square)
 
 </div>
@@ -56,7 +55,7 @@ FakeNews Detector verifies any pasted article in seconds by running an on-device
 | Mode | How it works | API Key required |
 |------|-------------|:---:|
 | 🧠 **Combined** | Runs both engines and reconciles agreement/disagreement with boosted confidence and a written rationale | Optional |
-| ⚡ **ML-only** | Instant XGBoost + TF-IDF classification (Real/Fake), fully offline | ❌ |
+| ⚡ **ML-only** | Instant Logistic Regression + TF-IDF classification (Real/Fake), fully offline | ❌ |
 | 🌐 **AI-only** | Searches the live web via DuckDuckGo, feeds evidence to GPT-4o-mini or Gemini, returns True/False/Uncertain with cited sources | ✅ |
 | 🔑 **BYOK Settings** | Users store GPT or Gemini keys locally in the browser; requests forward them per-call | — |
 | 📂 **Local History** | Every run is saved in `localStorage` and restorable with one click; no accounts, no server-side storage | ❌ |
@@ -68,14 +67,14 @@ FakeNews Detector verifies any pasted article in seconds by running an on-device
 ```
 frontend/          React 18 SPA (Vite) — 4 routes: Landing, /detector, /features, /about
     │
-    ├──▶ POST /api/v1/predict/ml    →  XGBoost + TF-IDF (offline, instant)
+    ├──▶ POST /api/v1/predict/ml    →  Logistic Regression + TF-IDF (offline, instant)
     ├──▶ POST /api/v1/predict/ai    →  DuckDuckGo → LangChain → GPT-4o-mini / Gemini
     └──▶ POST /api/v1/predict       →  Both engines → Verdict merger → CombinedResponse
             │
             ▼
     backend/app/     FastAPI router (3 POST endpoints + /health)
     │
-    ├── services/ml_predictor.py    — loads .pkl model + vectorizer via joblib
+    ├── services/ml_predictor.py    — loads model.pkl + vectorization.pkl via joblib
     ├── services/predictor.py       — AI pipeline orchestrator
     ├── services/searcher.py        — DuckDuckGo web search (top 5)
     ├── core/llm.py                 — LangChain client (lazy init per provider+key)
@@ -88,12 +87,12 @@ frontend/          React 18 SPA (Vite) — 4 routes: Landing, /detector, /featur
 ```mermaid
 flowchart TD
     A[User pastes article] --> B[React detector UI]
-    B -->|POST /predict/ml| C[XGBoost + TF-IDF]
+    B -->|POST /predict/ml| C[Logistic Regression + TF-IDF]
     B -->|POST /predict / /predict/ai| D[FastAPI router]
     D -->|query article| E[DuckDuckGo search ddgs]
     E -->|top 5 snippets| F[LangChain fact-check chain]
     F -->|structured output| G[GPT-4o-mini or Gemini]
-    C -->|label Real/Fake| H[Verdict merger]
+    C -->|label Real/Fake + confidence| H[Verdict merger]
     G -->|True/False/Uncertain + sources| H
     H -->|CombinedResponse| B
 ```
@@ -109,11 +108,11 @@ flowchart TD
 | Frontend | ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white&style=flat-square) ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white&style=flat-square) ![React Router](https://img.shields.io/badge/React_Router-6-CA4245?logo=reactrouter&logoColor=white&style=flat-square) | Fast SPA with route-level code splitting and instant HMR |
 | Styling | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square) ![Framer Motion](https://img.shields.io/badge/Framer_Motion-11-BB4BFF?logo=framer&logoColor=white&style=flat-square) | CSS-variable design tokens (dark forest-green); declarative page transitions |
 | Backend | ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white&style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white&style=flat-square) | Async endpoints, automatic OpenAPI docs, native ASGI |
-| ML | ![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-20BEFF?logo=xgboost&logoColor=white&style=flat-square) ![scikit-learn](https://img.shields.io/badge/scikit--learn-TF--IDF-F7931E?logo=scikitlearn&logoColor=white&style=flat-square) ![NLTK](https://img.shields.io/badge/NLTK-Tokenization-00B4D8?logo=python&logoColor=white&style=flat-square) | Text-classification baseline that runs fully offline |
+| ML | ![scikit-learn](https://img.shields.io/badge/scikit--learn-LogReg-F7931E?logo=scikitlearn&logoColor=white&style=flat-square) ![NLTK](https://img.shields.io/badge/NLTK-Tokenization-00B4D8?logo=python&logoColor=white&style=flat-square) | Logistic Regression + TF-IDF baseline that runs fully offline and returns calibrated probabilities |
 | AI | ![LangChain](https://img.shields.io/badge/LangChain-1.x-1C3C3C?logo=langchain&logoColor=white&style=flat-square) ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai&logoColor=white&style=flat-square) ![Gemini](https://img.shields.io/badge/Gemini-1.5--Flash-4285F4?logo=google&logoColor=white&style=flat-square) | Provider swap is one class; structured output enforces schema |
 | Search | ![DuckDuckGo](https://img.shields.io/badge/DuckDuckGo-ddgs-DE5833?logo=duckduckgo&logoColor=white&style=flat-square) | Free, keyless evidence gathering for fact-checking |
 | Storage | Pickle artifacts + browser `localStorage` | Zero infrastructure; nothing user-owned lives on the server |
-| Deploy | ![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?logo=vercel&logoColor=white&style=flat-square) | One platform hosts both the SPA and the API function |
+| Deploy | ![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?logo=vercel&logoColor=white&style=flat-square) | One Vercel project with two services (Vite SPA + FastAPI function) |
 
 ---
 
@@ -128,6 +127,7 @@ flowchart TD
 | **`localStorage`** | History and settings never leave the browser | Device-bound and cleared with site data |
 | **Split-hosting services** | Frontend (Vite) and backend (FastAPI) deploy as two Vercel services joined by rewrites | Cross-service `/api` proxy; the two deploy independently |
 | **Same-origin `/api` proxy** | Frontend calls relative `/api/v1`; dev server proxies to `127.0.0.1:8000`, production rewrites to the backend service | No CORS config or per-env API base URL needed in the browser |
+| **Non-blocking ML** | `predict_ml` runs the CPU-bound load/predict in a thread executor (`loop.run_in_executor`) | Keeps FastAPI's event loop responsive for concurrent requests |
 
 ---
 
@@ -146,7 +146,11 @@ flowchart TD
 
 ## 🚀 Demo
 
-No public demo is hosted yet. To record one: run the stack locally, paste any news paragraph in **Combined** mode, and capture the loading steps through the merged-verdict result screen as an animated GIF (`docs/demo.gif`).
+**Live deployment:** [https://fake-news-detection-git-main-mouzan-razas-projects.vercel.app/](https://fake-news-detection-git-main-mouzan-razas-projects.vercel.app/)
+
+The app is deployed end-to-end on Vercel as two services (Vite frontend + FastAPI backend) sharing one domain.
+
+To capture a demo GIF: paste any news paragraph in **Combined** mode and record the loading steps through the merged-verdict result screen (`docs/demo.gif`).
 
 **Fastest local look after a prior build:**
 
@@ -217,9 +221,9 @@ Interactive OpenAPI/Swagger UI at [http://127.0.0.1:8000/docs](http://127.0.0.1:
 ```json
 {
   "label": "Fake",
-  "confidence": 0.0,
+  "confidence": 0.886,
   "explanation": "The ML model classified this article as **Fake** news based on textual patterns learned from a dataset of real and fake news articles.",
-  "model": "XGBoost"
+  "model": "LogisticRegression"
 }
 ```
 
@@ -229,7 +233,7 @@ Interactive OpenAPI/Swagger UI at [http://127.0.0.1:8000/docs](http://127.0.0.1:
 
 ## 📊 Evaluation
 
-> No evaluation harness ships in the repository yet. The inherited documentation claims ~99% training-dataset accuracy for the XGBoost model (Kaggle "Fake and Real News" dataset); treat this as **unverified** since it is not reproducible from code in the repo.
+> No evaluation harness ships in the repository yet. The dataset (`backend/app/dataset/`) is the Kaggle "Fake and Real News" corpus; the shipped model was trained on it, but metrics are not yet reproducible from a script in the repo.
 
 | Metric | 🧠 ML Engine | 🌐 AI Engine | 🔀 Combined |
 |--------|:---:|:---:|:---:|
@@ -276,13 +280,12 @@ npm run dev        # proxies /api to http://127.0.0.1:8000
 
 | Issue | Detail |
 |-------|--------|
-| 🔒 ML confidence | Hardcoded to `0.0` — `predict()` exposes no probabilities |
 | 🎛️ Fusion rules | Hand-tuned heuristics, not learned weights; adversarial disagreements resolve by fixed precedence |
 | 🌐 Search quality | Free DuckDuckGo — subject to rate limits and result-quality variance, no query caching |
 | 🌍 English-only | NLTK stopwords, TF-IDF vocabulary, and prompts assume English articles |
 | 🛡️ No auth | No rate limiting or input length caps beyond Pydantic's non-empty check |
 | 📂 Local only | History/settings live in `localStorage` only — no sync, export, or cross-device persistence |
-| 📦 Bundle size | ~XGBoost + sklearn + LangChain risks exceeding Vercel's 250 MB function limit |
+| 📦 Bundle size | The committed ~117 MB training dataset ships inside the backend function, enlarging the deploy |
 | ⚠️ AI accuracy | AI explanations are generated content and can themselves be wrong; UI carries a disclaimer |
 
 ---
@@ -291,7 +294,7 @@ npm run dev        # proxies /api to http://127.0.0.1:8000
 
 | # | Improvement | Impact |
 |---|------------|--------|
-| 1 | Expose `predict_proba()` from XGBoost | Real calibrated confidence scores |
+| 1 | Class-weight / threshold tuning + calibration of the Logistic Regression model | Tune precision-recall trade-off beyond the default 0.5 threshold |
 | 2 | Automated eval harness (stratified Kaggle hold-out) | Reproducible metrics table in CI |
 | 3 | Learned meta-classifier over `[ml_label, ml_proba, ai_verdict, ai_confidence]` | Replace heuristic fusion |
 | 4 | DuckDuckGo result caching (TTL-based) + retry/backoff | Survive rate limits |
