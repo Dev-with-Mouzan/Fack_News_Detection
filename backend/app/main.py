@@ -1,12 +1,17 @@
 import logging
+import os
 from pathlib import Path
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+# Serverless filesystems are read-only except /tmp. Point NLTK at a writable
+# dir before any NLTK-dependent module (services.ml_predictor) is imported.
+os.environ.setdefault("NLTK_DATA", "/tmp/nltk_data")
 
-from api.routes import router
-from config import settings
+from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
+from api.routes import router  # noqa: E402
+from config import settings  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,

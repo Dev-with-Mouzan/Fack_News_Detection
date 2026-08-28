@@ -124,9 +124,10 @@ flowchart TD
 | **BYOK credentials** | `provider`/`api_key` travel in each request body and override env vars | Keys transit the server on every AI call |
 | **Lazy LLM init** | Clients built on first use per `(provider, key)` pair | First AI request pays cold-start latency |
 | **Rule-based fusion** | Agreement → boosted confidence; disagreement → AI defers for "False" | Interpretable and tunable, not statistically optimized |
-| **Same-origin serving** | FastAPI mounts `frontend/dist` when it exists | SPA must be rebuilt before backend-only changes can be previewed |
 | **Structured outputs** | Pydantic `with_structured_output(NewsResponse)` enforces schema | Depends on provider support for schema-constrained decoding |
 | **`localStorage`** | History and settings never leave the browser | Device-bound and cleared with site data |
+| **Split-hosting services** | Frontend (Vite) and backend (FastAPI) deploy as two Vercel services joined by rewrites | Cross-service `/api` proxy; the two deploy independently |
+| **Same-origin `/api` proxy** | Frontend calls relative `/api/v1`; dev server proxies to `127.0.0.1:8000`, production rewrites to the backend service | No CORS config or per-env API base URL needed in the browser |
 
 ---
 
@@ -150,7 +151,7 @@ No public demo is hosted yet. To record one: run the stack locally, paste any ne
 **Fastest local look after a prior build:**
 
 ```bash
-cd newspredict/backend && uvicorn main:app --app-dir app --port 8000
+cd backend && uvicorn main:app --app-dir app --port 8000
 # open http://127.0.0.1:8000
 ```
 
@@ -162,7 +163,7 @@ cd newspredict/backend && uvicorn main:app --app-dir app --port 8000
 
 ```bash
 git clone <repo-url>
-cd newspredict
+cd fake-news-detection
 ```
 
 **1. Backend dependencies**
@@ -176,12 +177,12 @@ pip install -r requirements.txt
 
 **2. Optional env config** — copy `.env.example` to `.env` and fill `OPENAI_API_KEY` and/or `GOOGLE_API_KEY` (server-side fallbacks; users can also supply keys in-app via Settings).
 
-**3. Frontend build**
+**3. Frontend build (optional — for a combined local preview)**
 
 ```bash
 cd ../frontend
 npm install
-npm run build        # outputs frontend/dist, served by FastAPI
+npm run build        # outputs frontend/dist; served by FastAPI if present (for a single-port local preview)
 ```
 
 **4. Run**
@@ -191,9 +192,7 @@ cd ../backend
 uvicorn main:app --app-dir app --reload --port 8000
 ```
 
-> Open [http://127.0.0.1:8000](http://127.0.0.1:8000)
-
-Frontend hot-reload alternative: `npm run dev` in `frontend/` serves `:5173` and proxies `/api` to `127.0.0.1:8000`.
+> Combined preview: open [http://127.0.0.1:8000](http://127.0.0.1:8000) (FastAPI serves the built SPA when `frontend/dist` exists). For frontend hot-reload during development, use `npm run dev` in `frontend/` — it serves `:5173` and proxies `/api` to `127.0.0.1:8000`.
 
 ---
 
