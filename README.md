@@ -131,19 +131,6 @@ flowchart TD
 
 ---
 
-## 🖼️ Screenshots
-
-> Drop real captures at these paths:
-
-| Screenshot | Description |
-|------------|-------------|
-| `docs/screenshots/landing.png` | Landing hero with animated background FX and detection mockup |
-| `docs/screenshots/detector-loading.png` | Detector mid-analysis with staged progress steps |
-| `docs/screenshots/detector-result.png` | Combined-mode result: verdict banner, confidence bar, model scores, cited sources |
-| `docs/screenshots/settings-modal.png` | AI settings modal with GPT/Gemini provider cards and masked key input |
-
----
-
 ## 🚀 Demo
 
 **Live deployment:** [https://fake-news-detection-git-main-mouzan-razas-projects.vercel.app/](https://fake-news-detection-git-main-mouzan-razas-projects.vercel.app/)
@@ -166,7 +153,7 @@ cd backend/app && uvicorn main:app --port 8000
 **Prerequisites:** ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white&style=flat-square) ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white&style=flat-square) ![npm](https://img.shields.io/badge/npm-11-CB3837?logo=npm&logoColor=white&style=flat-square)
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Dev-with-Mouzan/fake-news-detection.git
 cd fake-news-detection
 ```
 
@@ -179,7 +166,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-> The canonical backend lives in `backend/app/` (FastAPI app + `requirements.txt`), which is also the Vercel service root.
+
 
 **2. Optional env config** — copy `backend/.env.example` to `backend/app/.env` and fill `OPENAI_API_KEY` and/or `GOOGLE_API_KEY` (server-side fallbacks; users can also supply keys in-app via Settings).
 
@@ -199,50 +186,6 @@ uvicorn main:app --reload --port 8000
 ```
 
 > Combined preview: open [http://127.0.0.1:8000](http://127.0.0.1:8000) (FastAPI serves the built SPA when `frontend/dist` exists). For frontend hot-reload during development, use `npm run dev` in `frontend/` — it serves `:5173` and proxies `/api` to `127.0.0.1:8000`.
-
----
-
-## 📡 API Documentation
-
-Interactive OpenAPI/Swagger UI at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
-
-| Method | Path | Request Body | Response |
-|:------:|------|-------------|----------|
-| `POST` | `/api/v1/predict` | `{text, provider?, api_key?}` | `CombinedResponse` — ML + AI verdicts merged |
-| `POST` | `/api/v1/predict/ml` | `{text}` | `MLPredictionResponse` — label, confidence, explanation |
-| `POST` | `/api/v1/predict/ai` | `{text, provider?, api_key?}` | `NewsResponse` — verdict, sources, explanation |
-| `GET` | `/health` | — | `{"status": "ok"}` |
-
-> `provider` accepts `"gpt"` (OpenAI) or `"google"` (Gemini). When omitted, the server falls back to its env-configured key; if neither exists the AI endpoints return HTTP 400 with guidance.
-
-<details>
-<summary><strong>📄 Verified Example — POST /api/v1/predict/ml</strong></summary>
-
-```json
-{
-  "label": "Fake",
-  "confidence": 0.886,
-  "explanation": "The ML model classified this article as **Fake** news based on textual patterns learned from a dataset of real and fake news articles.",
-  "model": "LogisticRegression"
-}
-```
-
-</details>
-
----
-
-## 📊 Evaluation
-
-> No evaluation harness ships in the repository yet. The dataset (`backend/app/dataset/`) is the Kaggle "Fake and Real News" corpus; the shipped model was trained on it, but metrics are not yet reproducible from a script in the repo.
-
-| Metric | 🧠 ML Engine | 🌐 AI Engine | 🔀 Combined |
-|--------|:---:|:---:|:---:|
-| Accuracy | — | — | — |
-| Precision (Fake) | — | — | — |
-| Recall (Fake) | — | — | — |
-| Latency p50/p95 | — | — | — |
-
-**Intended methodology:** Split the Kaggle corpus into stratified train/test sets (the shipped pickles were fit on the full set), re-train on the train split, score all three modes against ground truth, and measure per-mode latency over 100 requests.
 
 ---
 
