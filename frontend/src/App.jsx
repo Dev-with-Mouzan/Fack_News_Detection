@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AnimatePresence, motion, MotionConfig } from "framer-motion";
+import { motion, MotionConfig } from "framer-motion";
 
 import Navbar from "./components/layout/Navbar.jsx";
 import Footer from "./components/layout/Footer.jsx";
@@ -19,7 +19,6 @@ function Page({ children }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.28, ease: "easeOut" }}
     >
       {children}
@@ -52,15 +51,13 @@ export default function App() {
             <Navbar />
 
             <main id="main" className="flex-1">
-              <AnimatePresence mode="wait" initial={false}>
-                <Routes location={location} key={location.pathname}>
-                  <Route path="/" element={<Page><Landing /></Page>} />
-                  <Route path="/detector" element={<Page><DetectorPage /></Page>} />
-                  <Route path="/features" element={<Page><FeaturesPage /></Page>} />
-                  <Route path="/about" element={<Page><AboutPage /></Page>} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </AnimatePresence>
+              <Routes key={location.pathname}>
+                <Route path="/" element={<Page><Landing /></Page>} />
+                <Route path="/detector" element={<Page><DetectorPage /></Page>} />
+                <Route path="/features" element={<Page><FeaturesPage /></Page>} />
+                <Route path="/about" element={<Page><AboutPage /></Page>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </main>
 
             <Footer />
