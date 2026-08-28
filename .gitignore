@@ -14,3 +14,6 @@ Thumbs.db
 # Frontend
 node_modules/
 backend/public/
+
+# Notebooks (training artifacts, not needed at deploy time)
+backend/app/Notebook/

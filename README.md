@@ -151,7 +151,7 @@ No public demo is hosted yet. To record one: run the stack locally, paste any ne
 **Fastest local look after a prior build:**
 
 ```bash
-cd backend && uvicorn main:app --app-dir app --port 8000
+cd backend/app && uvicorn main:app --port 8000
 # open http://127.0.0.1:8000
 ```
 
@@ -169,18 +169,20 @@ cd fake-news-detection
 **1. Backend dependencies**
 
 ```bash
-cd backend
+cd backend/app
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**2. Optional env config** — copy `.env.example` to `.env` and fill `OPENAI_API_KEY` and/or `GOOGLE_API_KEY` (server-side fallbacks; users can also supply keys in-app via Settings).
+> The canonical backend lives in `backend/app/` (FastAPI app + `requirements.txt`), which is also the Vercel service root.
+
+**2. Optional env config** — copy `backend/.env.example` to `backend/app/.env` and fill `OPENAI_API_KEY` and/or `GOOGLE_API_KEY` (server-side fallbacks; users can also supply keys in-app via Settings).
 
 **3. Frontend build (optional — for a combined local preview)**
 
 ```bash
-cd ../frontend
+cd ../../frontend
 npm install
 npm run build        # outputs frontend/dist; served by FastAPI if present (for a single-port local preview)
 ```
@@ -188,8 +190,8 @@ npm run build        # outputs frontend/dist; served by FastAPI if present (for 
 **4. Run**
 
 ```bash
-cd ../backend
-uvicorn main:app --app-dir app --reload --port 8000
+cd ../app
+uvicorn main:app --reload --port 8000
 ```
 
 > Combined preview: open [http://127.0.0.1:8000](http://127.0.0.1:8000) (FastAPI serves the built SPA when `frontend/dist` exists). For frontend hot-reload during development, use `npm run dev` in `frontend/` — it serves `:5173` and proxies `/api` to `127.0.0.1:8000`.
@@ -242,37 +244,30 @@ Interactive OpenAPI/Swagger UI at [http://127.0.0.1:8000/docs](http://127.0.0.1:
 
 ## ☁️ Deployment
 
-The backend (694 MB bundle with XGBoost + LangChain) exceeds Vercel's 500 MB serverless limit, so the frontend and backend deploy separately.
+The project deploys as a **single Vercel project with two services** (frontend + backend) sharing one domain, wired together by the rewrites in the root `vercel.json`.
 
-| Service | Platform | Config |
-|---------|----------|--------|
-| **Frontend** | Vercel | `vercel.json` (root) — builds SPA, serves static assets |
-| **Backend** | Render (free tier) | `backend/` — FastAPI + XGBoost + LangChain |
+| Service | Root | Framework | Entrypoint |
+|---------|------|-----------|-----------|
+| **Frontend** | `frontend` | Vite | — |
+| **Backend** | `backend/app` | Python (FastAPI) | `main:app` |
 
-### Frontend (Vercel)
+### How routing works
 
-1. Push to GitHub
-2. Import the repo on [vercel.com](https://vercel.com)
-3. Set environment variable: `VITE_API_BASE` = your Render backend URL + `/api/v1`
+Root `vercel.json` routes `/api/*` to the backend service and every other path to the frontend service, so the SPA calls the API same-origin (no CORS, no per-env API base URL).
 
-### Backend (Render)
+### Deploy steps
 
-1. Create a free account on [render.com](https://render.com)
-2. New → **Web Service** → connect your repo
-3. Settings:
-   - **Root Directory:** `backend`
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn main:app --app-dir app --host 0.0.0.0 --port $PORT`
-4. Add env vars: `OPENAI_API_KEY`, `GOOGLE_API_KEY` (optional, users can also BYOK)
-5. Deploy — Render provides a public URL like `https://your-app.onrender.com`
+1. Push to GitHub.
+2. Import the repo on [vercel.com](https://vercel.com).
+3. Set the project's **Framework Preset** to **Services** (required for the `services` key in `vercel.json` to take effect).
+4. Add environment variables to the **backend** service (or project level): `OPENAI_API_KEY`, `GOOGLE_API_KEY` (optional — users can also supply keys in-app).
+5. Add `NLTK_DATA=/tmp/nltk_data` so NLTK can download its corpora on the read-only serverless filesystem (a default is also set in `backend/app/main.py`).
 
-### Split-hosting tip
-
-When running frontend locally against the deployed backend:
+### Local dev against the deployed backend
 
 ```bash
 cd frontend
-VITE_API_BASE=https://your-app.onrender.com/api/v1 npm run dev
+npm run dev        # proxies /api to http://127.0.0.1:8000
 ```
 
 ---

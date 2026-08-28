@@ -1,3 +1,5 @@
+import asyncio
+import functools
 import logging
 import os
 import re
@@ -15,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 # Paths to saved model files
 _MODELS_DIR = Path(__file__).resolve().parent.parent / "ml_models"
-_MODEL_PATH = _MODELS_DIR / "final_model(XGBoost).pkl"
-_VECTORIZER_PATH = _MODELS_DIR / "vectorizer.pkl"
+_MODEL_PATH = _MODELS_DIR / "model.pkl"
+_VECTORIZER_PATH = _MODELS_DIR / "vectorization.pkl"
 
 # On read-only serverless filesystems (e.g. Vercel), NLTK_DATA points to a
 # writable /tmp directory — create it before any download attempt.
@@ -67,7 +69,17 @@ def _preprocess(text: str) -> str:
 
 
 async def predict_ml(text: str) -> MLPredictionResponse:
-    """Run the local XGBoost model on the given news text."""
+    """Run the local classifier on the given news text.
+
+    Supports any fitted scikit-learn estimator exposing `predict` and
+    `predict_proba` (e.g. Logistic Regression). The CPU-bound work runs in a
+    thread executor so it does not block the FastAPI event loop.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, functools.partial(_predict_sync, text))
+
+
+def _predict_sync(text: str) -> MLPredictionResponse:
     _load_models()
 
     cleaned = _preprocess(text)
@@ -76,12 +88,27 @@ async def predict_ml(text: str) -> MLPredictionResponse:
 
     label = "Real" if prediction == 1 else "Fake"
 
+    # Real probability when the estimator exposes predict_proba.
+    confidence = 0.0
+    try:
+        proba = _model.predict_proba(vectorized)[0]
+        classes = list(getattr(_model, "classes_", []))
+        pos = classes.index(prediction) if prediction in classes else prediction
+        if proba.ndim == 1:
+            confidence = float(proba[pos])
+        elif len(proba) >= 2:
+            confidence = float(proba[pos] if 0 <= pos < len(proba) else max(proba))
+    except (AttributeError, ValueError, IndexError, TypeError):
+        confidence = 0.0
+
+    model_name = getattr(_model, "__class__", None).__name__ or "LogisticRegression"
+
     return MLPredictionResponse(
         label=label,
-        confidence=0.0,  # XGBoost doesn't expose predict_proba by default here
+        confidence=confidence,
         explanation=(
             f"The ML model classified this article as **{label}** news "
             "based on textual patterns learned from a dataset of real and fake news articles."
         ),
-        model="XGBoost",
+        model=model_name,
     )
