@@ -13,11 +13,19 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 
-# Serve the built frontend (frontend/dist). The Vite build outputs here so
-# the assets are hosted by the static build in the single-project deploy.
-# Falls back to frontend/ if the app hasn't been built yet (local runs).
+# Serve the built frontend (backend/public). Vite writes the production
+# bundle here (see frontend/vite.config.js) so the assets ship inside the
+# Vercel serverless function. Falls back to the legacy frontend/dist path
+# for local runs done before the migration.
+_PUBLIC_DIR = Path(__file__).resolve().parent.parent / "public"
 _FRONTEND_ROOT = Path(__file__).resolve().parent.parent.parent / "frontend"
-FRONTEND_DIR = _FRONTEND_ROOT / "dist" if (_FRONTEND_ROOT / "dist").exists() else _FRONTEND_ROOT
+
+if _PUBLIC_DIR.exists():
+    FRONTEND_DIR = _PUBLIC_DIR
+elif (_FRONTEND_ROOT / "dist").exists():
+    FRONTEND_DIR = _FRONTEND_ROOT / "dist"
+else:
+    FRONTEND_DIR = None
 
 app = FastAPI(
     title="News Predictor API",
@@ -46,6 +54,21 @@ async def health():
     return {"status": "ok"}
 
 
-# Serve frontend static files
-if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+from fastapi.responses import FileResponse
+
+# Serve the embedded frontend. All non-API paths fall back to index.html so
+# client-side routes (/about, /features, /detector, ...) work on refresh and
+# on direct links. Real asset files (js/css/png) are resolved from disk.
+if FRONTEND_DIR is not None and FRONTEND_DIR.exists():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=str(FRONTEND_DIR / "assets")),
+        name="assets",
+    )
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa(full_path: str):
+        candidate = (FRONTEND_DIR / full_path).resolve()
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(FRONTEND_DIR / "index.html")

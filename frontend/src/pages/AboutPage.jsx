@@ -36,7 +36,7 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55 }}
-          className="max-w-2xl"
+          className="mx-auto max-w-2xl text-center"
         >
           <p className="eyebrow">About</p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">

@@ -1,26 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "installCommand": "cd frontend && npm install",
   "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
     {
       "src": "backend/api/index.py",
       "use": "@vercel/python",
-      "config": { "maxDuration": 60 }
+      "config": {
+        "maxDuration": 60,
+        "includeFiles": ["backend/public/**"]
+      }
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "backend/api/index.py" },
-    { "src": "/health", "dest": "backend/api/index.py" },
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "backend/api/index.py" }
   ],
   "headers": [
     {

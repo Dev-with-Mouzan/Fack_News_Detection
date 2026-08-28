@@ -76,15 +76,17 @@ export default function Features({ items = CORE_FEATURES, id }) {
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.55 }}
         >
-          <p className="eyebrow">Why FakeNews Detector</p>
-          <h2 className="mt-3 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Two engines are better than one
-          </h2>
-          <p className="mt-4 max-w-2xl leading-relaxed text-muted">
-            Single-source fact-checking is fragile. FakeNews Detector combines
-            statistical pattern matching with live evidence gathering, so a
-            verdict only sticks when the signals line up.
-          </p>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="eyebrow">Why FakeNews Detector</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Two engines are better than one
+            </h2>
+            <p className="mt-4 leading-relaxed text-muted">
+              Single-source fact-checking is fragile. FakeNews Detector combines
+              statistical pattern matching with live evidence gathering, so a
+              verdict only sticks when the signals line up.
+            </p>
+          </div>
         </motion.div>
 
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
