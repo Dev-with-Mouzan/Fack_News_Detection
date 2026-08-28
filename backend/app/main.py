@@ -13,8 +13,9 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 
-# Serve the built frontend (frontend/dist). Falls back to frontend/ if the
-# app hasn't been built yet, so the backend still runs pre-migration.
+# Serve the built frontend (frontend/dist). The Vite build outputs here so
+# the assets are hosted by the static build in the single-project deploy.
+# Falls back to frontend/ if the app hasn't been built yet (local runs).
 _FRONTEND_ROOT = Path(__file__).resolve().parent.parent.parent / "frontend"
 FRONTEND_DIR = _FRONTEND_ROOT / "dist" if (_FRONTEND_ROOT / "dist").exists() else _FRONTEND_ROOT
 
